@@ -1,0 +1,21 @@
+{
+  "name": "a2ui-playground-server",
+  "version": "0.1.0",
+  "description": "A2UI Playground server application",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "koa": "^2.0.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.0.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^5.0.0"
+  }
+}

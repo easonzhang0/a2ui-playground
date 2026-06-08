@@ -1,0 +1,16 @@
+{
+  "name": "@a2ui/core",
+  "version": "0.1.0",
+  "description": "A2UI core library with parser, vnode, and treebuilder modules",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
