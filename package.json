@@ -12,6 +12,8 @@
     "build:packages": "pnpm run --filter @a2ui/core build && pnpm run --filter @a2ui/react build"
   },
   "devDependencies": {
+    "@types/mocha": "^10.0.0",
+    "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
   },
   "engines": {

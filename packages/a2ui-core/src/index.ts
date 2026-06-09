@@ -1,3 +1,5 @@
 // export * from './parser'
 // export * from './vnode'
 // export * from './treebuilder'
+export * from './store'
+export * from './mock'

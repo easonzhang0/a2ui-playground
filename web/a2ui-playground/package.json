@@ -9,7 +9,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@a2ui/react": "^0.1.0",
+    "a2ui-core": "workspace:0.1.0",
+    "a2ui-react": "workspace:0.1.0",
     "react": "^18.0.0",
     "react-dom": "^18.0.0"
   },

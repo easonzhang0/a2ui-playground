@@ -17,7 +17,8 @@
     "paths": {
       "@a2ui/core": ["packages/a2ui-core/src"],
       "@a2ui/react": ["packages/a2ui-react/src"]
-    }
+    },
+    "types": ["node", "mocha"]
   },
   "include": ["packages/**/*.ts", "packages/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

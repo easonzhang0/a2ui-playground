@@ -1,46 +1,70 @@
-## 项目介绍
-实现一个A2UI-playground, 用户通过web应用生成对应的UI界面
+# A2UI Playground
+
+基于 LLM 的 AI 驱动 UI 生成与渲染平台。用户通过自然语言对话，让 AI Agent 输出符合 A2UI 协议的 JSON，由客户端协议引擎实时解析渲染为可交互界面。
 
 ## 项目架构
-项目使用monorepo组织代码
-包含以下几个核心模块
 
-packages
-- a2ui-core: 包含UI组件库和渲染引擎,包含以下模块：
-    - parser用来解析a2ui协议
-    - vnode，用来映射管理a2ui协议生成的组件
-    - treebuilder，用来根据a2ui协议生成调用a2ui渲染器，并生成最终的渲染树
+pnpm Monorepo，包含以下模块：
 
-- a2ui-react: 基于react的a2ui协议渲染引擎
+```
+a2ui-full-finish/
+├── packages/
+│   ├── a2ui-core/          # 协议解析引擎 SDK
+│   └── a2ui-react/         # React 渲染层
+├── web/
+│   └── a2ui-playground/    # Playground 前端
+├── server/
+│   └── a2ui-playground-server/  # Agent 服务端
+├── specification/          # A2UI 协议规范文档
+└── docs/                   # 设计文档与评估用例
+```
 
-package主要职责： 维护a2ui 相关的sdk, 并支持生产对应的npm包
+### packages/a2ui-core
 
+A2UI 协议 SDK，发布为 npm 包。核心模块：
 
-web
-- a2ui-playground: 包含A2UI-playground的web应用
+- **parser** — JSONL 流式解析器，处理协议消息，流式 JSONL 缓冲区与行边界检测，支持未完整到达时按括号匹配提前提取单个 component
+- **vnode** — 协议组件虚拟节点映射与管理
+- **treebuilder** — 协议 → 渲染树构建，含渲染节流调度
+- **store** — 运行时状态管理，维护 surfaceMap / hydrateNodeMap / renderMap / errorMap 等渲染状态，提供增删改查与数据模型写入能力
+- **dataModel** — 数据模型引擎，协议数据绑定与运行时数据更新，增量合并
 
-主要职责及详细功能
-1. 可以通过对话的方式，让AI Agent生成对应的UI界面
-2. 可以预览对应的AI界面
-3. 可以支持多轮对话对生成的UI进行调整
-4. 可以预览a2ui-react 定义的基础a2ui组件
-5. 可以支持协议调试
+### packages/a2ui-react
 
+基于 React 的 A2UI 渲染层，将协议组件映射为 React Element。
 
-server
-- a2ui-playground-server: 包含A2UI-playground的server端应用
+### web/a2ui-playground
 
-1. 基于openAI, 实现a2ui agent
-2. 实现a2ui-server，支持a2ui协议的生成及缓存
+Playground 前端（Vite + React + Zustand），功能：
 
+1. 对话式 UI 生成与实时预览
+2. 多轮对话增量编辑
+3. 多模态（图片）输入
+4. 协议调试面板
+5. 增量协议前端合并
 
-### 基础依赖
-所有的项目需要支持typescript
+### server/a2ui-playground-server
 
-web: 使用vite构建playground
-server: 
-- 使用koa实现服务接口
-- agent基于openAI建链
-- 使用ts-node运行
+Agent 服务端（Koa + ts-node），核心职责：
 
+1. 基于 OpenAI API 实现 A2UI Agent
+2. AG-UI 协议事件流编排，SSE 下发
+3. Server-side Tool Calling 循环（get_antd_icons / get_available_components / query_data_source 等），最多 6 轮
+4. LLM 输出容错解析与 JSONL 分片
+5. 多模态支持：自动检测用户图片输入，切换 Vision Model
 
+## 技术栈
+
+- **语言**：TypeScript
+- **前端**：React / Zustand / Vite
+- **后端**：Koa / ts-node
+- **AI**：OpenAI Chat Completions API / Function Calling
+- **协议通信**：AG-UI 协议 / Server-Sent Events
+
+## 快速开始
+
+```bash
+pnpm install
+pnpm run dev:server
+pnpm run dev:web
+```
