@@ -1,145 +1,178 @@
-import { createStore } from 'zustand/vanilla'
-import type { A2uiStore, A2uiStoreActions, A2uiStoreWithActions, Surface, HydrateNode, A2uiError } from './types'
+import { createStore } from 'zustand/vanilla';
 
-/**
- * 初始状态
- */
-const initialState: A2uiStore = {
+// 类型定义
+export enum ErrorType {
+  PARE_ERROR = 'PARE_ERROR',
+}
+
+export interface Error {
+  type: ErrorType;
+  content: string;
+}
+
+export interface HydrateNode {
+  componentId: string;
+  _vnode: any;
+  ownerSurfaceId: string;
+  protocal: string;
+}
+
+export interface Surface {
+  surfaceId: string;
+  beginrender: boolean;
+  rootNode: HydrateNode;
+}
+
+export interface RenderFunction {
+  (props: any): any;
+}
+
+export interface RenderMap {
+  [componentName: string]: RenderFunction;
+}
+
+export interface A2uiStoreState {
+  surfaceMap: Record<string, Surface>;
+  hydrateNodeMap: Record<string, HydrateNode>;
+  errorMap: Record<string, Error>;
+  renderMap: RenderMap | null;
+  
+  resetStore: () => void;
+  
+  addSurface: (surface: Surface) => void;
+  updateSurface: (surfaceId: string, updates: Partial<Surface>) => void;
+  removeSurface: (surfaceId: string) => void;
+  getSurface: (surfaceId: string) => Surface | undefined;
+  
+  addHydrateNode: (node: HydrateNode) => void;
+  updateHydrateNode: (componentId: string, updates: Partial<HydrateNode>) => void;
+  removeHydrateNode: (componentId: string) => void;
+  getHydrateNode: (componentId: string) => HydrateNode | undefined;
+  
+  addError: (error: Error) => void;
+  removeError: (errorId: string) => void;
+  getErrors: () => Error[];
+  
+  setRenderMap: (renderMap: RenderMap) => void;
+  getRenderMap: () => RenderMap | null;
+  
+  clear: () => void;
+}
+
+export const createA2uiStore = () => createStore<A2uiStoreState>((set, get) => ({
   surfaceMap: {},
   hydrateNodeMap: {},
-  errorMap: {}
-}
-
-/**
- * 创建A2UI Store
- * 使用zustand/vanilla实现，不依赖React
- */
-export const createA2uiStore = () => {
-  return createStore<A2uiStoreWithActions>((set, get) => ({
-    ...initialState,
-
-    // Surface操作
-    addSurface: (surface: Surface) => {
-      set((state) => ({
-        surfaceMap: {
-          ...state.surfaceMap,
-          [surface.surfaceId]: surface
-        }
-      }))
-    },
-
-    updateSurface: (surfaceId: string, updates: Partial<Surface>) => {
-      set((state) => {
-        const surface = state.surfaceMap[surfaceId]
-        if (!surface) return state
-
-        return {
-          surfaceMap: {
-            ...state.surfaceMap,
-            [surfaceId]: { ...surface, ...updates }
-          }
-        }
-      })
-    },
-
-    deleteSurface: (surfaceId: string) => {
-      set((state) => {
-        const { [surfaceId]: _, ...rest } = state.surfaceMap
-        return { surfaceMap: rest }
-      })
-    },
-
-    getSurface: (surfaceId: string) => {
-      return get().surfaceMap[surfaceId]
-    },
-
-    // HydrateNode操作
-    addHydrateNode: (node: HydrateNode) => {
-      set((state) => ({
-        hydrateNodeMap: {
-          ...state.hydrateNodeMap,
-          [node.componentId]: node
-        }
-      }))
-    },
-
-    updateHydrateNode: (componentId: string, updates: Partial<HydrateNode>) => {
-      set((state) => {
-        const node = state.hydrateNodeMap[componentId]
-        if (!node) return state
-
-        return {
-          hydrateNodeMap: {
-            ...state.hydrateNodeMap,
-            [componentId]: { ...node, ...updates }
-          }
-        }
-      })
-    },
-
-    deleteHydrateNode: (componentId: string) => {
-      set((state) => {
-        const { [componentId]: _, ...rest } = state.hydrateNodeMap
-        return { hydrateNodeMap: rest }
-      })
-    },
-
-    getHydrateNode: (componentId: string) => {
-      return get().hydrateNodeMap[componentId]
-    },
-
-    // Error操作
-    addError: (errorId: string, error: A2uiError) => {
-      set((state) => ({
-        errorMap: {
-          ...state.errorMap,
-          [errorId]: { ...error, timestamp: Date.now() }
-        }
-      }))
-    },
-
-    deleteError: (errorId: string) => {
-      set((state) => {
-        const { [errorId]: _, ...rest } = state.errorMap
-        return { errorMap: rest }
-      })
-    },
-
-    getError: (errorId: string) => {
-      return get().errorMap[errorId]
-    },
-
-    clearErrors: () => {
-      set({ errorMap: {} })
-    },
-
-    // 重置store
-    reset: () => {
-      set(initialState)
+  errorMap: {},
+  renderMap: null,
+  
+  resetStore: () => set({
+    surfaceMap: {},
+    hydrateNodeMap: {},
+    errorMap: {},
+    renderMap: null
+  }),
+  
+  addSurface: (surface) => set((state) => ({
+    surfaceMap: {
+      ...state.surfaceMap,
+      [surface.surfaceId]: surface
     }
-  }))
-}
+  })),
+  
+  updateSurface: (surfaceId, updates) => set((state) => ({
+    surfaceMap: {
+      ...state.surfaceMap,
+      [surfaceId]: {
+        ...state.surfaceMap[surfaceId],
+        ...updates
+      }
+    }
+  })),
+  
+  removeSurface: (surfaceId) => set((state) => {
+    const newHydrateNodeMap = { ...state.hydrateNodeMap };
+    Object.entries(newHydrateNodeMap).forEach(([componentId, node]) => {
+      if (node.ownerSurfaceId === surfaceId) {
+        delete newHydrateNodeMap[componentId];
+      }
+    });
+    
+    const newSurfaceMap = { ...state.surfaceMap };
+    delete newSurfaceMap[surfaceId];
+    
+    return {
+      surfaceMap: newSurfaceMap,
+      hydrateNodeMap: newHydrateNodeMap
+    };
+  }),
+  
+  getSurface: (surfaceId) => get().surfaceMap[surfaceId],
+  
+  addHydrateNode: (node) => set((state) => ({
+    hydrateNodeMap: {
+      ...state.hydrateNodeMap,
+      [node.componentId]: node
+    }
+  })),
+  
+  updateHydrateNode: (componentId, updates) => set((state) => {
+    const newHydrateNodeMap = {
+      ...state.hydrateNodeMap,
+      [componentId]: {
+        ...state.hydrateNodeMap[componentId],
+        ...updates
+      }
+    };
+    
+    const newSurfaceMap = { ...state.surfaceMap };
+    Object.entries(newSurfaceMap).forEach(([surfaceId, surface]) => {
+      if (surface.rootNode.componentId === componentId) {
+        newSurfaceMap[surfaceId] = {
+          ...surface,
+          rootNode: newHydrateNodeMap[componentId]
+        };
+      }
+    });
+    
+    return {
+      hydrateNodeMap: newHydrateNodeMap,
+      surfaceMap: newSurfaceMap
+    };
+  }),
+  
+  removeHydrateNode: (componentId) => set((state) => {
+    const newHydrateNodeMap = { ...state.hydrateNodeMap };
+    delete newHydrateNodeMap[componentId];
+    return { hydrateNodeMap: newHydrateNodeMap };
+  }),
+  
+  getHydrateNode: (componentId) => get().hydrateNodeMap[componentId],
+  
+  addError: (error) => set((state) => ({
+    errorMap: {
+      ...state.errorMap,
+      [Date.now().toString()]: error
+    }
+  })),
+  
+  removeError: (errorId) => set((state) => {
+    const newErrorMap = { ...state.errorMap };
+    delete newErrorMap[errorId];
+    return { errorMap: newErrorMap };
+  }),
+  
+  getErrors: () => Object.values(get().errorMap),
+  
+  setRenderMap: (renderMap) => set({ renderMap }),
+  
+  getRenderMap: () => get().renderMap,
+  
+  clear: () => set({
+    surfaceMap: {},
+    hydrateNodeMap: {},
+    errorMap: {},
+    renderMap: null
+  })
+}));
 
-/**
- * 默认store实例
- */
-export const a2uiStore = createA2uiStore()
-
-/**
- * 初始化A2UI Store
- * 创建一个新的store实例
- * @returns 返回新创建的store实例
- */
-export const init = () => {
-  return createA2uiStore()
-}
-
-/**
- * 获取store状态
- */
-export const getStoreState = () => a2uiStore.getState()
-
-/**
- * 订阅store变化
- */
-export const subscribeToStore = a2uiStore.subscribe
+export const a2uiStore = createA2uiStore();

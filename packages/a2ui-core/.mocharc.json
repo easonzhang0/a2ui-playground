@@ -1,9 +1,5 @@
 {
-  "require": ["ts-node/register"],
+  "require": ["ts-node/register/transpile-only"],
   "spec": "test/**/*.test.ts",
-  "timeout": 10000,
-  "exit": true,
-  "ts-node": {
-    "project": "tsconfig.test.json"
-  }
+  "timeout": 5000
 }

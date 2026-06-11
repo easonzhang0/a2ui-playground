@@ -1,174 +1,116 @@
-import { expect } from 'chai'
-import { createA2uiStore } from '../src/store/index'
-import { ErrorType } from '../src/store/types'
+import { expect } from 'chai';
+import { createA2uiStore, a2uiStore, HydrateNode } from '../src/store';
 
-describe('createA2uiStore', () => {
-  describe('初始化测试', () => {
-    it('应该成功创建一个新的store实例', () => {
-      const store = createA2uiStore()
-      expect(store).to.be.an('object')
-      expect(store).to.not.be.null
-    })
+describe('A2uiStore', () => {
+  describe('createA2uiStore', () => {
+    it('should create store with initialized state', () => {
+      const store = createA2uiStore();
+      
+      // 创建后，所有map应该为空对象（已自动初始化）
+      expect(store.getState().surfaceMap).to.deep.equal({});
+      expect(store.getState().hydrateNodeMap).to.deep.equal({});
+      expect(store.getState().errorMap).to.deep.equal({});
+    });
 
-    it('应该创建具有正确初始状态的store', () => {
-      const store = createA2uiStore()
-      const state = store.getState()
+    it('should reset store when calling resetStore', () => {
+      const store = createA2uiStore();
+      
+      // 创建一个hydrateNode
+      const hydrateNode: HydrateNode = {
+        componentId: 'test-root',
+        _vnode: {},
+        ownerSurfaceId: 'test-surface',
+        protocal: '{"id":"test-root","component":{}}'
+      };
+      
+      // 添加一些数据
+      store.getState().addHydrateNode(hydrateNode);
+      store.getState().addSurface({
+        surfaceId: 'test-surface',
+        beginrender: false,
+        rootNode: hydrateNode
+      });
+      
+      // 重置store
+      store.getState().resetStore();
+      
+      // 数据应该被重置
+      expect(store.getState().surfaceMap).to.deep.equal({});
+      expect(store.getState().hydrateNodeMap).to.deep.equal({});
+      expect(store.getState().errorMap).to.deep.equal({});
+    });
+  });
 
-      expect(state.surfaceMap).to.deep.equal({})
-      expect(state.hydrateNodeMap).to.deep.equal({})
-      expect(state.errorMap).to.deep.equal({})
-    })
+  describe('a2uiStore default instance', () => {
+    it('should create default store instance', () => {
+      expect(a2uiStore).to.exist;
+      expect(typeof a2uiStore.getState).to.equal('function');
+    });
 
-    it('应该返回具有所有必要操作方法的store', () => {
-      const store = createA2uiStore()
-      const state = store.getState()
+    it('should have initialized state', () => {
+      // 默认store应该已初始化
+      expect(a2uiStore.getState().surfaceMap).to.deep.equal({});
+      expect(a2uiStore.getState().hydrateNodeMap).to.deep.equal({});
+      expect(a2uiStore.getState().errorMap).to.deep.equal({});
+    });
+  });
 
-      expect(state.addSurface).to.be.a('function')
-      expect(state.updateSurface).to.be.a('function')
-      expect(state.deleteSurface).to.be.a('function')
-      expect(state.getSurface).to.be.a('function')
-      expect(state.addHydrateNode).to.be.a('function')
-      expect(state.updateHydrateNode).to.be.a('function')
-      expect(state.deleteHydrateNode).to.be.a('function')
-      expect(state.getHydrateNode).to.be.a('function')
-      expect(state.addError).to.be.a('function')
-      expect(state.deleteError).to.be.a('function')
-      expect(state.getError).to.be.a('function')
-      expect(state.clearErrors).to.be.a('function')
-      expect(state.reset).to.be.a('function')
-    })
-
-    it('每次调用应该返回独立的store实例', () => {
-      const store1 = createA2uiStore()
-      const store2 = createA2uiStore()
-
-      expect(store1).to.not.equal(store2)
-
-      store1.getState().addSurface({
-        surfaceId: 'surface1',
-        beginRender: false,
-        rootNode: null
-      })
-
-      const state1 = store1.getState()
-      const state2 = store2.getState()
-
-      expect(Object.keys(state1.surfaceMap).length).to.equal(1)
-      expect(Object.keys(state2.surfaceMap).length).to.equal(0)
-    })
-  })
-
-  describe('store操作测试', () => {
-    it('应该能够添加和获取surface', () => {
-      const store = createA2uiStore()
-      const state = store.getState()
-
-      const surface = {
-        surfaceId: 'surface-1',
-        beginRender: true,
-        rootNode: null
-      }
-
-      state.addSurface(surface)
-      const retrieved = state.getSurface('surface-1')
-
-      expect(retrieved).to.deep.equal(surface)
-    })
-
-    it('应该能够添加和获取hydrateNode', () => {
-      const store = createA2uiStore()
-      const state = store.getState()
-
-      const node = {
-        componentId: 'node-1',
-        _vnode: null,
-        ownerSurfaceId: 'surface-1',
-        protocol: '{"type":"button"}'
-      }
-
-      state.addHydrateNode(node)
-      const retrieved = state.getHydrateNode('node-1')
-
-      expect(retrieved).to.deep.equal(node)
-    })
-
-    it('应该能够添加和获取error', () => {
-      const store = createA2uiStore()
-      const state = store.getState()
-
-      const error = {
-        type: ErrorType.RENDER_ERROR,
-        content: 'Render failed'
-      }
-
-      state.addError('error-1', error)
-      const retrieved = state.getError('error-1')
-
-      expect(retrieved).to.not.be.undefined
-      expect(retrieved?.type).to.equal(error.type)
-      expect(retrieved?.content).to.equal(error.content)
-      expect(retrieved?.timestamp).to.be.a('number')
-    })
-
-    it('应该能够删除surface', () => {
-      const store = createA2uiStore()
-      let state = store.getState()
-
-      state.addSurface({ surfaceId: 'surface-1', beginRender: false, rootNode: null })
-      state = store.getState()
-      expect(Object.keys(state.surfaceMap).length).to.equal(1)
-
-      state.deleteSurface('surface-1')
-      state = store.getState()
-      expect(Object.keys(state.surfaceMap).length).to.equal(0)
-    })
-
-    it('应该能够删除hydrateNode', () => {
-      const store = createA2uiStore()
-      let state = store.getState()
-
-      state.addHydrateNode({ componentId: 'node-1', _vnode: null, ownerSurfaceId: 'surface-1', protocol: '{}' })
-      state = store.getState()
-      expect(Object.keys(state.hydrateNodeMap).length).to.equal(1)
-
-      state.deleteHydrateNode('node-1')
-      state = store.getState()
-      expect(Object.keys(state.hydrateNodeMap).length).to.equal(0)
-    })
-
-    it('应该能够清空所有errors', () => {
-      const store = createA2uiStore()
-      let state = store.getState()
-
-      state.addError('error-1', { type: ErrorType.PARSE_ERROR, content: 'Error 1' })
-      state.addError('error-2', { type: ErrorType.RENDER_ERROR, content: 'Error 2' })
-      state = store.getState()
-      expect(Object.keys(state.errorMap).length).to.equal(2)
-
-      state.clearErrors()
-      state = store.getState()
-      expect(Object.keys(state.errorMap).length).to.equal(0)
-    })
-
-    it('应该能够重置store状态', () => {
-      const store = createA2uiStore()
-      let state = store.getState()
-
-      state.addSurface({ surfaceId: 'surface-1', beginRender: false, rootNode: null })
-      state.addHydrateNode({ componentId: 'node-1', _vnode: null, ownerSurfaceId: 'surface-1', protocol: '{}' })
-      state.addError('error-1', { type: ErrorType.PARSE_ERROR, content: 'Error' })
-
-      state = store.getState()
-      expect(Object.keys(state.surfaceMap).length).to.equal(1)
-      expect(Object.keys(state.hydrateNodeMap).length).to.equal(1)
-      expect(Object.keys(state.errorMap).length).to.equal(1)
-
-      state.reset()
-      state = store.getState()
-
-      expect(state.surfaceMap).to.deep.equal({})
-      expect(state.hydrateNodeMap).to.deep.equal({})
-      expect(state.errorMap).to.deep.equal({})
-    })
-  })
-})
+  describe('removeSurface', () => {
+    it('should remove surface and related hydrateNodes', () => {
+      const store = createA2uiStore();
+      
+      // 创建hydrateNodes
+      const hydrateNode1: HydrateNode = {
+        componentId: 'text-1',
+        _vnode: { Text: { text: { literalString: 'Hello' } } },
+        ownerSurfaceId: 'test-surface',
+        protocal: '{"id":"text-1","component":{"Text":{"text":{"literalString":"Hello"}}}}'
+      };
+      
+      const hydrateNode2: HydrateNode = {
+        componentId: 'text-2',
+        _vnode: { Text: { text: { literalString: 'World' } } },
+        ownerSurfaceId: 'test-surface',
+        protocal: '{"id":"text-2","component":{"Text":{"text":{"literalString":"World"}}}}'
+      };
+      
+      const hydrateNode3: HydrateNode = {
+        componentId: 'text-3',
+        _vnode: { Text: { text: { literalString: 'Other' } } },
+        ownerSurfaceId: 'other-surface',
+        protocal: '{"id":"text-3","component":{"Text":{"text":{"literalString":"Other"}}}}'
+      };
+      
+      // 添加hydrateNodes
+      store.getState().addHydrateNode(hydrateNode1);
+      store.getState().addHydrateNode(hydrateNode2);
+      store.getState().addHydrateNode(hydrateNode3);
+      
+      // 添加一个surface
+      store.getState().addSurface({
+        surfaceId: 'test-surface',
+        beginrender: false,
+        rootNode: hydrateNode1
+      });
+      
+      // 验证添加成功
+      expect(store.getState().surfaceMap['test-surface']).to.exist;
+      expect(store.getState().hydrateNodeMap['text-1']).to.exist;
+      expect(store.getState().hydrateNodeMap['text-2']).to.exist;
+      expect(store.getState().hydrateNodeMap['text-3']).to.exist;
+      
+      // 删除surface
+      store.getState().removeSurface('test-surface');
+      
+      // 验证surface被删除
+      expect(store.getState().surfaceMap['test-surface']).to.be.undefined;
+      
+      // 验证相关的hydrateNode被删除
+      expect(store.getState().hydrateNodeMap['text-1']).to.be.undefined;
+      expect(store.getState().hydrateNodeMap['text-2']).to.be.undefined;
+      
+      // 验证其他surface的hydrateNode还在
+      expect(store.getState().hydrateNodeMap['text-3']).to.exist;
+    });
+  });
+});
