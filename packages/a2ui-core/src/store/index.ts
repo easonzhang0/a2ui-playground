@@ -1,4 +1,9 @@
 import { createStore } from 'zustand/vanilla';
+import {
+  mergeDataModelUpdate,
+  setValueAtPath,
+  type DataModelUpdatePayload
+} from '../dataModel';
 
 // 类型定义
 export enum ErrorType {
@@ -10,11 +15,19 @@ export interface Error {
   content: string;
 }
 
+export interface ChildrenTemplateMeta {
+  dataBinding: string;
+  templateComponentId: string;
+}
+
 export interface HydrateNode {
   componentId: string;
   _vnode: any;
   ownerSurfaceId: string;
   protocal: string;
+  children?: string[];
+  childrenTemplate?: ChildrenTemplateMeta;
+  hasMounted?: boolean;
 }
 
 export interface Surface {
@@ -36,6 +49,8 @@ export interface A2uiStoreState {
   hydrateNodeMap: Record<string, HydrateNode>;
   errorMap: Record<string, Error>;
   renderMap: RenderMap | null;
+  /** 各 surface 的数据模型真值；由 dataModelUpdate 与隐式 literal+path 写入 */
+  dataModelBySurfaceId: Record<string, unknown>;
   
   resetStore: () => void;
   
@@ -48,6 +63,7 @@ export interface A2uiStoreState {
   updateHydrateNode: (componentId: string, updates: Partial<HydrateNode>) => void;
   removeHydrateNode: (componentId: string) => void;
   getHydrateNode: (componentId: string) => HydrateNode | undefined;
+  setHydrateNodeMounted: (componentId: string) => void;
   
   addError: (error: Error) => void;
   removeError: (errorId: string) => void;
@@ -55,6 +71,11 @@ export interface A2uiStoreState {
   
   setRenderMap: (renderMap: RenderMap) => void;
   getRenderMap: () => RenderMap | null;
+
+  getDataModel: (surfaceId: string) => unknown;
+  applyDataModelUpdate: (update: DataModelUpdatePayload) => void;
+  /** 隐式绑定：在 path 处写入单值（会扩展嵌套对象） */
+  setDataModelValueAtPath: (surfaceId: string, path: string, value: unknown) => void;
   
   clear: () => void;
 }
@@ -64,12 +85,14 @@ export const createA2uiStore = () => createStore<A2uiStoreState>((set, get) => (
   hydrateNodeMap: {},
   errorMap: {},
   renderMap: null,
+  dataModelBySurfaceId: {},
   
   resetStore: () => set({
     surfaceMap: {},
     hydrateNodeMap: {},
     errorMap: {},
-    renderMap: null
+    renderMap: null,
+    dataModelBySurfaceId: {}
   }),
   
   addSurface: (surface) => set((state) => ({
@@ -99,10 +122,14 @@ export const createA2uiStore = () => createStore<A2uiStoreState>((set, get) => (
     
     const newSurfaceMap = { ...state.surfaceMap };
     delete newSurfaceMap[surfaceId];
+
+    const newDataModel = { ...state.dataModelBySurfaceId };
+    delete newDataModel[surfaceId];
     
     return {
       surfaceMap: newSurfaceMap,
-      hydrateNodeMap: newHydrateNodeMap
+      hydrateNodeMap: newHydrateNodeMap,
+      dataModelBySurfaceId: newDataModel
     };
   }),
   
@@ -111,7 +138,10 @@ export const createA2uiStore = () => createStore<A2uiStoreState>((set, get) => (
   addHydrateNode: (node) => set((state) => ({
     hydrateNodeMap: {
       ...state.hydrateNodeMap,
-      [node.componentId]: node
+      [node.componentId]: {
+        ...node,
+        hasMounted: false
+      }
     }
   })),
   
@@ -148,6 +178,31 @@ export const createA2uiStore = () => createStore<A2uiStoreState>((set, get) => (
   
   getHydrateNode: (componentId) => get().hydrateNodeMap[componentId],
   
+  setHydrateNodeMounted: (componentId) => set((state) => {
+    const newHydrateNodeMap = {
+      ...state.hydrateNodeMap,
+      [componentId]: {
+        ...state.hydrateNodeMap[componentId],
+        hasMounted: true
+      }
+    };
+    
+    const newSurfaceMap = { ...state.surfaceMap };
+    Object.entries(newSurfaceMap).forEach(([surfaceId, surface]) => {
+      if (surface.rootNode.componentId === componentId) {
+        newSurfaceMap[surfaceId] = {
+          ...surface,
+          rootNode: newHydrateNodeMap[componentId]
+        };
+      }
+    });
+    
+    return {
+      hydrateNodeMap: newHydrateNodeMap,
+      surfaceMap: newSurfaceMap
+    };
+  }),
+  
   addError: (error) => set((state) => ({
     errorMap: {
       ...state.errorMap,
@@ -166,12 +221,43 @@ export const createA2uiStore = () => createStore<A2uiStoreState>((set, get) => (
   setRenderMap: (renderMap) => set({ renderMap }),
   
   getRenderMap: () => get().renderMap,
+
+  getDataModel: (surfaceId) => get().dataModelBySurfaceId[surfaceId],
+
+  applyDataModelUpdate: (update) =>
+    set((state) => {
+      const prev = state.dataModelBySurfaceId[update.surfaceId];
+      const next = mergeDataModelUpdate(prev, update.path, update.contents);
+      return {
+        dataModelBySurfaceId: {
+          ...state.dataModelBySurfaceId,
+          [update.surfaceId]: next
+        }
+      };
+    }),
+
+  setDataModelValueAtPath: (surfaceId, path, value) =>
+    set((state) => {
+      const prev = state.dataModelBySurfaceId[surfaceId];
+      const base: Record<string, unknown> =
+        prev !== null && typeof prev === 'object' && !Array.isArray(prev)
+          ? (JSON.parse(JSON.stringify(prev)) as Record<string, unknown>)
+          : {};
+      setValueAtPath(base, path, value);
+      return {
+        dataModelBySurfaceId: {
+          ...state.dataModelBySurfaceId,
+          [surfaceId]: base
+        }
+      };
+    }),
   
   clear: () => set({
     surfaceMap: {},
     hydrateNodeMap: {},
     errorMap: {},
-    renderMap: null
+    renderMap: null,
+    dataModelBySurfaceId: {}
   })
 }));
 

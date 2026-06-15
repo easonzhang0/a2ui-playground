@@ -11,9 +11,9 @@
         "component": {
           "Text": {
             "text": {
-              "literalString": "Hello，A2UI!"
+              "literalString": "Hello!"
             },
-            "usageHint": "h1"
+            "usageHint": "h4"
           }
         }
       }

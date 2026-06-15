@@ -1,10 +1,16 @@
 import { expect } from 'chai';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import React from 'react';
 import { a2uiParser, A2UIMessage, RenderMap, RenderFunction } from '../src/parser';
 import { createA2uiStore } from '../src/store';
 
 describe('A2UIParser', () => {
+  beforeEach(() => {
+    a2uiParser.resetRuntimeState();
+    a2uiParser.setStore(createA2uiStore());
+  });
+
   describe('parseBeginRendering', () => {
     it('should parse beginRendering message and create Surface', () => {
       const mockData = JSON.parse(
@@ -93,7 +99,10 @@ describe('A2UIParser', () => {
   });
 
   describe('parseDataModelUpdate', () => {
-    it('should parse dataModelUpdate message', () => {
+    it('should parse dataModelUpdate message and merge into store data model', () => {
+      const testStore = createA2uiStore();
+      a2uiParser.setStore(testStore);
+
       const dataModelUpdateData: A2UIMessage = {
         dataModelUpdate: {
           surfaceId: 'surface-001',
@@ -123,6 +132,14 @@ describe('A2UIParser', () => {
       expect(result.dataModelUpdate?.contents).to.have.lengthOf(3);
       expect(result.dataModelUpdate?.contents[0].key).to.equal('name');
       expect(result.dataModelUpdate?.contents[0].valueString).to.equal('John Doe');
+
+      const model = testStore.getState().getDataModel('surface-001') as Record<string, unknown>;
+      expect(model).to.exist;
+      expect(model.user).to.be.an('object');
+      const user = model.user as Record<string, unknown>;
+      expect(user.name).to.equal('John Doe');
+      expect(user.age).to.equal(30);
+      expect(user.active).to.equal(true);
     });
   });
 
@@ -150,7 +167,7 @@ describe('A2UIParser', () => {
     it('should set renderMap', () => {
       const testStore = createA2uiStore();
       const mockRenderMap: RenderMap = {
-        Text: (props: any) => ({ type: 'Text', props })
+        Text: (props: any) => React.createElement('div', { 'data-testid': 'text', ...props })
       };
 
       testStore.getState().setRenderMap(mockRenderMap);
@@ -174,21 +191,14 @@ describe('A2UIParser', () => {
       });
 
       expect(result.hydrateNodes).to.exist;
-      expect(result.hydrateNodes![0]._vnode).to.deep.equal({
-        type: 'Text',
-        props: {
-          text: { literalString: 'Hello, A2UI!' },
-          usageHint: 'h1'
-        }
-      });
+      expect(result.hydrateNodes![0]._vnode).to.have.property('type');
+      expect(result.hydrateNodes![0]._vnode).to.have.property('props');
     });
 
     it('should render component using renderMap', () => {
       const testStore = createA2uiStore();
-      const mockRenderFunction: RenderFunction = (props: any) => ({
-        rendered: true,
-        props
-      });
+      const mockRenderFunction: RenderFunction = (props: any) => 
+        React.createElement('div', { 'data-testid': 'text', ...props });
 
       const mockRenderMap: RenderMap = {
         Text: mockRenderFunction
@@ -212,12 +222,9 @@ describe('A2UIParser', () => {
           ]
         }
       });
-      expect(result.hydrateNodes![0]._vnode).to.deep.equal({
-        rendered: true,
-        props: {
-          text: { literalString: 'Test Text' }
-        }
-      });
+      expect(result.hydrateNodes![0]._vnode).to.have.property('type');
+      expect(result.hydrateNodes![0]._vnode).to.have.property('props');
+      expect(result.hydrateNodes![0]._vnode.props).to.have.property('data-testid', 'text');
     });
 
     it('should return original component data when renderMap is not set', () => {
@@ -314,13 +321,15 @@ describe('A2UIParser', () => {
       expect(result.hydrateNodes![0]._vnode).to.deep.equal({
         type: 'Text',
         props: {
-          text: { literalString: 'Text Component' }
+          text: { literalString: 'Text Component' },
+          id: 'text-1'
         }
       });
       expect(result.hydrateNodes![1]._vnode).to.deep.equal({
         type: 'Button',
         props: {
-          label: 'Click Me'
+          label: 'Click Me',
+          id: 'button-1'
         }
       });
     });

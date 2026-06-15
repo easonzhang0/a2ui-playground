@@ -1,14 +1,24 @@
 import React from 'react';
 
 export interface TextProps {
+  id?: string;
+  className?: string;
   text: {
     literalString?: string;
     path?: string;
   };
   usageHint?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'caption' | 'body';
+  hasMounted?: boolean;
+  onMountComplete?: (componentId: string) => void;
 }
 
-export const Text: React.FC<TextProps> = ({ text, usageHint = 'body' }) => {
+export const Text: React.FC<TextProps> = ({ 
+  id, 
+  className,
+  text, 
+  usageHint = 'body'
+}) => {
+
   const displayText = text.literalString || text.path || '';
 
   const styleMap: Record<string, React.CSSProperties> = {
@@ -48,5 +58,15 @@ export const Text: React.FC<TextProps> = ({ text, usageHint = 'body' }) => {
     }
   };
 
-  return <div style={styleMap[usageHint]}>{displayText}</div>;
+  return (
+    <div 
+      id={id} 
+      className={className}
+      style={{
+        ...styleMap[usageHint]
+      }}
+    >
+      {displayText}
+    </div>
+  );
 };

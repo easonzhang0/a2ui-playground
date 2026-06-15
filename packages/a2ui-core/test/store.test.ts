@@ -10,6 +10,7 @@ describe('A2uiStore', () => {
       expect(store.getState().surfaceMap).to.deep.equal({});
       expect(store.getState().hydrateNodeMap).to.deep.equal({});
       expect(store.getState().errorMap).to.deep.equal({});
+      expect(store.getState().dataModelBySurfaceId).to.deep.equal({});
     });
 
     it('should reset store when calling resetStore', () => {
@@ -38,6 +39,7 @@ describe('A2uiStore', () => {
       expect(store.getState().surfaceMap).to.deep.equal({});
       expect(store.getState().hydrateNodeMap).to.deep.equal({});
       expect(store.getState().errorMap).to.deep.equal({});
+      expect(store.getState().dataModelBySurfaceId).to.deep.equal({});
     });
   });
 
@@ -52,6 +54,7 @@ describe('A2uiStore', () => {
       expect(a2uiStore.getState().surfaceMap).to.deep.equal({});
       expect(a2uiStore.getState().hydrateNodeMap).to.deep.equal({});
       expect(a2uiStore.getState().errorMap).to.deep.equal({});
+      expect(a2uiStore.getState().dataModelBySurfaceId).to.deep.equal({});
     });
   });
 
@@ -111,6 +114,18 @@ describe('A2uiStore', () => {
       
       // 验证其他surface的hydrateNode还在
       expect(store.getState().hydrateNodeMap['text-3']).to.exist;
+    });
+
+    it('should remove data model for surface when removeSurface is called', () => {
+      const store = createA2uiStore();
+      store.getState().applyDataModelUpdate({
+        surfaceId: 's1',
+        path: '/a',
+        contents: [{ key: 'b', valueString: 'x' }]
+      });
+      expect((store.getState().getDataModel('s1') as Record<string, unknown>).a).to.exist;
+      store.getState().removeSurface('s1');
+      expect(store.getState().getDataModel('s1')).to.be.undefined;
     });
   });
 });
