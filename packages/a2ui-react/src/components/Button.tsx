@@ -18,16 +18,22 @@ export interface ButtonAction {
 export interface ButtonProps {
   id?: string;
   className?: string;
+  /** 协议可内联文案；若用 child 引用子 Text，由 treeBuild 注入 children */
   text?: {
     literalString?: string;
     path?: string;
   };
+  /** 协议字段，仅声明用；树组装前由 parser 去掉，勿依赖 */
+  child?: string;
+  /** 协议常用 primary；与 variant 二选一时可由 primary 推导 */
+  primary?: boolean;
   variant?: 'primary' | 'secondary' | 'outline' | 'text';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   hasMounted?: boolean;
   onMountComplete?: (componentId: string) => void;
   action?: ButtonAction;
+  children?: React.ReactNode;
   /** Injected by createRenderMap when local action options are provided. */
   onLocalDataModelUpdate?: (payload: DataModelUpdatePayload) => void;
   /** Injected when createRenderMap provides openExternalLink. */
@@ -38,15 +44,18 @@ export const Button: React.FC<ButtonProps> = ({
   id,
   className,
   text,
-  variant = 'primary',
+  primary,
+  variant: variantProp,
   size = 'medium',
   disabled = false,
   action,
   onLocalDataModelUpdate,
-  onOpenLink
+  onOpenLink,
+  children
 }) => {
+  const variant =
+    variantProp ?? (primary === false ? 'secondary' : primary === true ? 'primary' : 'primary');
   const displayText = text?.literalString || text?.path || '';
-
   const variantStyles: Record<string, React.CSSProperties> = {
     primary: {
       backgroundColor: '#007bff',
@@ -113,7 +122,7 @@ export const Button: React.FC<ButtonProps> = ({
         opacity: disabled ? 0.6 : 1
       }}
     >
-      {displayText}
+      {children != null && children !== false ? children : displayText}
     </button>
   );
 };

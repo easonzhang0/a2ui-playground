@@ -594,6 +594,51 @@ export class A2UIParser {
       };
     }
 
+    if (
+      componentName === 'Image' &&
+      componentProps &&
+      componentProps.url !== undefined &&
+      componentProps.url !== null &&
+      typeof componentProps.url === 'object' &&
+      !Array.isArray(componentProps.url)
+    ) {
+      componentProps = {
+        ...componentProps,
+        url: resolveBoundText(componentProps.url, textScope)
+      };
+    }
+
+    if (
+      componentName === 'Icon' &&
+      componentProps &&
+      componentProps.name !== undefined &&
+      componentProps.name !== null &&
+      typeof componentProps.name === 'object' &&
+      !Array.isArray(componentProps.name)
+    ) {
+      componentProps = {
+        ...componentProps,
+        name: resolveBoundText(componentProps.name, textScope)
+      };
+    }
+
+    if (componentName === 'Card' && componentProps) {
+      let next = { ...componentProps };
+      if (next.title && typeof next.title === 'object' && !Array.isArray(next.title)) {
+        next = {
+          ...next,
+          title: { literalString: resolveBoundText(next.title, textScope) }
+        };
+      }
+      if (next.subtitle && typeof next.subtitle === 'object' && !Array.isArray(next.subtitle)) {
+        next = {
+          ...next,
+          subtitle: { literalString: resolveBoundText(next.subtitle, textScope) }
+        };
+      }
+      componentProps = next;
+    }
+
     if (renderMap[componentName]) {
       const propsWithId = componentId ? { ...componentProps, id: componentId } : componentProps;
       const result = renderMap[componentName](propsWithId);
@@ -784,7 +829,25 @@ export class A2UIParser {
       };
     });
 
-    const rootHydrateNode = hydrateNodes.find(node => node.componentId === surfaceUpdate.components[0].id);
+    // 根节点必须以 beginRendering.root 为准；不能仅用 components[0]（顺序可能与 root 不一致，或增量更新仅含子节点）
+    const rootId =
+      this.rootComponentId !== undefined
+        ? this.rootComponentId
+        : surfaceUpdate.components[0]?.id;
+    let rootHydrateNode = rootId
+      ? hydrateNodes.find((node) => node.componentId === rootId)
+      : undefined;
+    if (!rootHydrateNode && this.store && rootId) {
+      const existing = this.store.getState().getSurface(surfaceUpdate.surfaceId);
+      if (existing && existing.rootNode.componentId === rootId) {
+        rootHydrateNode = existing.rootNode;
+      }
+    }
+    if (!rootHydrateNode) {
+      rootHydrateNode = surfaceUpdate.components[0]?.id
+        ? hydrateNodes.find((node) => node.componentId === surfaceUpdate.components[0].id)
+        : undefined;
+    }
 
     if (!rootHydrateNode) {
       throw new Error('Root component not found in surfaceUpdate');
@@ -803,6 +866,10 @@ export class A2UIParser {
     // 检查组件是否有children属性
     if (componentProps.children && componentProps.children.explicitList) {
       return componentProps.children.explicitList;
+    }
+    // Button：协议用 child 指向单个子组件 id（多为 Text），供 treeBuild 挂载
+    if (typeof componentProps.child === 'string' && componentProps.child.trim()) {
+      return [componentProps.child.trim()];
     }
     return undefined;
   }
@@ -917,6 +984,9 @@ export class A2UIParser {
         }
         if (newProps.children && typeof newProps.children === 'object' && !Array.isArray(newProps.children)) {
           delete newProps.children;
+        }
+        if (newProps.child !== undefined) {
+          delete newProps.child;
         }
         return newProps;
       };
