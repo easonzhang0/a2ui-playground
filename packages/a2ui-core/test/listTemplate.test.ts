@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import React from 'react';
-import { a2uiParser, makeTemplateInstanceId, RenderMap, type A2UIMessage } from '../src/parser';
-import { createA2uiStore } from '../src/store';
+import { a2uiParser, makeTemplateInstanceId, type A2UIMessage } from '../src/parser';
+import { createA2uiStore, RenderMap } from '../src/store';
 
 describe('List children.template', () => {
   let parserStore: ReturnType<typeof createA2uiStore>;
@@ -31,7 +31,7 @@ describe('List children.template', () => {
 
   it('parseSurfaceUpdate sets childrenTemplate from mock', () => {
     const mock = JSON.parse(
-      readFileSync(join(__dirname, '../mock/list-template-smoke.json'), 'utf-8')
+      readFileSync(join(__dirname, '../mock/list-template-demo.json'), 'utf-8')
     );
     a2uiParser.parseMessage({ beginRendering: mock.beginRendering });
     const r = a2uiParser.parseMessage({ surfaceUpdate: mock.surfaceUpdate });
@@ -46,7 +46,7 @@ describe('List children.template', () => {
 
   it('treeBuild expands template with unique synthetic ids and item-scoped Text', () => {
     const mock = JSON.parse(
-      readFileSync(join(__dirname, '../mock/list-template-smoke.json'), 'utf-8')
+      readFileSync(join(__dirname, '../mock/list-template-demo.json'), 'utf-8')
     );
     const r = a2uiParser.parseMessage(mock as A2UIMessage);
     const hydrateNodes = r.hydrateNodes!;

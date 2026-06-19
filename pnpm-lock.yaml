@@ -54,6 +54,9 @@ importers:
 
   packages/a2ui-react:
     dependencies:
+      '@ant-design/icons':
+        specifier: ^6.1.0
+        version: 6.2.5(react-dom@18.3.1)(react@18.3.1)
       a2ui-core:
         specifier: workspace:0.1.0
         version: link:../a2ui-core
@@ -82,6 +85,12 @@ importers:
       '@ag-ui/encoder':
         specifier: ^0.0.48
         version: 0.0.48
+      '@ant-design/icons':
+        specifier: ^6.1.0
+        version: 6.2.5(react-dom@18.3.1)(react@18.3.1)
+      dotenv:
+        specifier: ^16.4.5
+        version: 16.6.1
       koa:
         specifier: ^2.14.0
         version: 2.16.4
@@ -2122,6 +2131,11 @@ packages:
     resolution: {integrity: sha512-PJWHUb1RFevKCwaFA9RlG5tCd+FO5iRh9A8HEtkmBH2Li03iJriB6m6JIN4rGz3K3JLawI7/veA1xzRKP6ISBw==}
     engines: {node: '>=0.3.1'}
     dev: true
+
+  /dotenv@16.6.1:
+    resolution: {integrity: sha512-uBq4egWHTcTt33a72vpSG0z3HnPuIl6NqYcTrKEg2azoEyl2hpW0zqlxysq2pK9HlDIHyHyakeYaYnSAwd8bow==}
+    engines: {node: '>=12'}
+    dev: false
 
   /dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}

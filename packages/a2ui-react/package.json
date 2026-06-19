@@ -23,6 +23,7 @@
     "react-dom": "^18.2.0"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.1.0",
     "a2ui-core": "workspace:0.1.0"
   },
   "devDependencies": {

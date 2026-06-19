@@ -10,8 +10,8 @@ import {
   resolveBoundText,
   type DataEntry
 } from '../src/dataModel';
-import { a2uiParser, RenderMap } from '../src/parser';
-import { createA2uiStore } from '../src/store';
+import { a2uiParser } from '../src/parser';
+import { createA2uiStore, RenderMap } from '../src/store';
 
 describe('dataModel utils', () => {
   it('contentsToObject maps adjacency list to nested object', () => {
@@ -132,7 +132,7 @@ describe('parser + dataModel + binding (smoke)', () => {
 
   it('applies combined mock JSON: implicit init then dataModelUpdate resolves Text from store', () => {
     const raw = readFileSync(
-      join(__dirname, '../mock/data-binding-smoke.json'),
+      join(__dirname, '../mock/data-binding-demo.json'),
       'utf-8'
     );
     const combined = JSON.parse(raw) as {

@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import React from 'react';
-import { a2uiParser, RenderMap } from '../src/parser';
-import { createA2uiStore } from '../src/store';
+import { a2uiParser } from '../src/parser';
+import { createA2uiStore, RenderMap } from '../src/store';
 
 describe('treeBuild', () => {
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe('treeBuild', () => {
   describe('component tree building', () => {
     it('should build component tree with parent-child relationships', () => {
       const mockData = JSON.parse(
-        readFileSync(join(__dirname, '../mock/column-with-texts.json'), 'utf-8')
+        readFileSync(join(__dirname, '../mock/column-with-texts-demo.json'), 'utf-8')
       );
 
       const beginRenderingResult = a2uiParser.parseMessage({
@@ -77,7 +77,7 @@ describe('treeBuild', () => {
       a2uiParser.setStore(testStore);
 
       const mockData = JSON.parse(
-        readFileSync(join(__dirname, '../mock/column-with-texts.json'), 'utf-8')
+        readFileSync(join(__dirname, '../mock/column-with-texts-demo.json'), 'utf-8')
       );
 
       const surfaceUpdateResult = a2uiParser.parseMessage({
@@ -113,7 +113,7 @@ describe('treeBuild', () => {
 
     it('should use first node as root when rootComponentId is not provided', () => {
       const mockData = JSON.parse(
-        readFileSync(join(__dirname, '../mock/simple-text.json'), 'utf-8')
+        readFileSync(join(__dirname, '../mock/text-demo.json'), 'utf-8')
       );
 
       const surfaceUpdateResult = a2uiParser.parseMessage({
@@ -217,7 +217,7 @@ describe('treeBuild', () => {
       a2uiParser.setStore(testStore);
 
       const mockData = JSON.parse(
-        readFileSync(join(__dirname, '../mock/column-with-texts.json'), 'utf-8')
+        readFileSync(join(__dirname, '../mock/column-with-texts-demo.json'), 'utf-8')
       );
 
       const surfaceUpdateResult = a2uiParser.parseMessage({

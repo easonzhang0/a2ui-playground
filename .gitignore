@@ -1,5 +1,5 @@
 node_modules
 specification
 tsconfig.tsbuildinfo
-pnpm-lock.yaml
 dist
+.env

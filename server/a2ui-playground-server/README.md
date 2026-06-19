@@ -49,7 +49,7 @@ curl -sS -X POST 'http://localhost:3847/api/agent?sse=0' \
 
 ## Mock 选择
 
-- 默认：`column-with-texts`。
+- 默认：`column-with-texts-demo`。
 - 用户最后一条 **user** 消息内容为 `local` 或包含 `local-action` 时，使用 `local-action-text-demo.json`。
 
 ## 前端联调

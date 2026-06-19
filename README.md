@@ -7,7 +7,7 @@
 pnpm Monorepo，包含以下模块：
 
 ```
-a2ui-full-finish/
+a2ui-playground/
 ├── packages/
 │   ├── a2ui-core/          # 协议解析引擎 SDK
 │   └── a2ui-react/         # React 渲染层
@@ -15,8 +15,7 @@ a2ui-full-finish/
 │   └── a2ui-playground/    # Playground 前端
 ├── server/
 │   └── a2ui-playground-server/  # Agent 服务端
-├── specification/          # A2UI 协议规范文档
-└── docs/                   # 设计文档与评估用例
+└── specification/          # A2UI 协议规范文档
 ```
 
 ### packages/a2ui-core

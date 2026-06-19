@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { type CSSProperties } from 'react';
+import { mergeComponentStyles } from './mergeComponentStyles';
 import type { DataModelUpdatePayload } from 'a2ui-core';
 
 /** Client-side open URL; mirrors optional userAction.openLink for transport. */
@@ -38,6 +39,8 @@ export interface ButtonProps {
   onLocalDataModelUpdate?: (payload: DataModelUpdatePayload) => void;
   /** Injected when createRenderMap provides openExternalLink. */
   onOpenLink?: (spec: OpenLinkSpec) => void;
+  /** 协议可选：button 根节点额外 inline 样式 */
+  styles?: CSSProperties;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -51,10 +54,12 @@ export const Button: React.FC<ButtonProps> = ({
   action,
   onLocalDataModelUpdate,
   onOpenLink,
-  children
+  children,
+  styles
 }) => {
   const variant =
-    variantProp ?? (primary === false ? 'secondary' : primary === true ? 'primary' : 'primary');
+    variantProp ??
+    (primary === true ? 'primary' : primary === false ? 'secondary' : 'outline');
   const displayText = text?.literalString || text?.path || '';
   const variantStyles: Record<string, React.CSSProperties> = {
     primary: {
@@ -114,13 +119,16 @@ export const Button: React.FC<ButtonProps> = ({
       type="button"
       disabled={disabled}
       onClick={handleClick}
-      style={{
-        ...variantStyles[variant],
-        ...sizeStyles[size],
-        borderRadius: '4px',
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.6 : 1
-      }}
+      style={mergeComponentStyles(
+        {
+          ...variantStyles[variant],
+          ...sizeStyles[size],
+          borderRadius: '4px',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.6 : 1
+        },
+        styles
+      )}
     >
       {children != null && children !== false ? children : displayText}
     </button>

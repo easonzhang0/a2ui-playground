@@ -2,8 +2,8 @@ import { expect } from 'chai';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 import React from 'react';
-import { a2uiParser, A2UIMessage, RenderMap, RenderFunction } from '../src/parser';
-import { createA2uiStore } from '../src/store';
+import { a2uiParser, A2UIMessage } from '../src/parser';
+import { createA2uiStore, RenderMap, RenderFunction } from '../src/store';
 
 describe('A2UIParser', () => {
   beforeEach(() => {
@@ -14,7 +14,7 @@ describe('A2UIParser', () => {
   describe('parseBeginRendering', () => {
     it('should parse beginRendering message and create Surface', () => {
       const mockData = JSON.parse(
-        readFileSync(join(__dirname, '../mock/simple-text.json'), 'utf-8')
+        readFileSync(join(__dirname, '../mock/text-demo.json'), 'utf-8')
       ) as A2UIMessage;
 
       const result = a2uiParser.parseMessage(mockData);
@@ -30,7 +30,7 @@ describe('A2UIParser', () => {
   describe('parseSurfaceUpdate', () => {
     it('should parse surfaceUpdate message and create Surface', () => {
       const mockData = JSON.parse(
-        readFileSync(join(__dirname, '../mock/simple-text.json'), 'utf-8')
+        readFileSync(join(__dirname, '../mock/text-demo.json'), 'utf-8')
       ) as A2UIMessage;
 
       const result = a2uiParser.parseMessage({
@@ -46,7 +46,7 @@ describe('A2UIParser', () => {
 
     it('should parse component and create HydrateNode', () => {
       const mockData = JSON.parse(
-        readFileSync(join(__dirname, '../mock/simple-text.json'), 'utf-8')
+        readFileSync(join(__dirname, '../mock/text-demo.json'), 'utf-8')
       ) as A2UIMessage;
 
       const result = a2uiParser.parseMessage({
