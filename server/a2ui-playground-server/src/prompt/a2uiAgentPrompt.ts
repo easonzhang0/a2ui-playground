@@ -46,6 +46,17 @@ export function buildA2uiAgentSystemPrompt(options?: BuildA2uiAgentSystemPromptO
 - 若分多行输出，每行须是**完整** JSON 对象（JSONL），勿输出截断行。
 - **语法必须合法**：整段须能被标准 \`JSON.parse\` 解析。\`surfaceUpdate.components\` 中每一项形如 \`{"id":"…","component":{…}}\`；嵌套 \`Column\`/\`Card\` 时**勿多写或少写 \`}\`**（常见错误：某个 \`component\` 闭合处多了一个 \`}\`，会导致其后组件全部解析失败）。
 
+【JSON 格式自检（强制）】
+生成完成后，**必须**逐字符核对括号匹配，确保 JSON 可被 \`JSON.parse\` 解析：
+- **计数检查**：统计 \`{\` 和 \`}\` 的数量，两者必须相等；统计 \`[\` 和 \`]\` 的数量，两者必须相等。
+- **嵌套检查**：每个 \`component\` 对象必须完整闭合。例如 \`{"id":"x","component":{"Button":{"child":"y"}}}\` 有 3 层 \`{\`，必须有 3 个 \`}\` 闭合。
+- **常见错误示例**：
+  ❌ \`{"id":"btn","component":{"Button":{"action":{...}}}}\` — \`Button\` 对象少了一个 \`}\`，应为 \`}}}\`
+  ❌ \`{"id":"btn","component":{"Button":{...}}}}}\` — \`component\` 对象多了一个 \`}\`，应为 \`}}}\`
+  ✅ \`{"id":"btn","component":{"Button":{"child":"btn-text"}}}\` — 正确，3 层 \`{\` 对应 3 个 \`}\`
+- **数组闭合**：\`context\` 是数组 \`[...]\`，闭合时先 \`]\` 再 \`}\`。例如 \`{"context":[{"key":"k","value":{...}}]}\` 闭合顺序为 \`]}]\` → \`]}\` → \`}}\`。
+- **生成后验证**：输出前在心里默数：从最后一个 \`}\` 往前数，确保每个 \`}\` 都有对应的 \`{\`。
+
 【beginRendering.root 必须正确】
 - \`beginRendering.surfaceId\` 与后续 \`surfaceUpdate.surfaceId\` 必须一致。
 - \`beginRendering.root\` 必须是**整棵 UI 树的根容器组件**的 id（**卡片 UI 时为最外层 \`Card\` 的 id**；否则多为 Column、Row 等布局根），即 \`surfaceUpdate.components\` 中作为树顶、不再被任何其他组件 \`children\` / \`child\` 引用的那条根组件的 \`id\`。
